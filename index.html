@@ -10,6 +10,7 @@
     <input type="file" id="file-input" accept=".xlsx, .xls" />
     <div id="file-content" style="white-space: pre-wrap; margin-top: 20px;"></div>
     <div id="negative-values" style="white-space: pre-wrap; margin-top: 20px;"></div>
+    <div id="summary" style="white-space: pre-wrap; margin-top: 20px;"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
 
@@ -28,8 +29,10 @@
                 workbook.xlsx.load(data).then(function() {
                     const fileContentContainer = document.getElementById('file-content');
                     const negativeValuesContainer = document.getElementById('negative-values');
+                    const summaryContainer = document.getElementById('summary');
                     fileContentContainer.innerText = "Processing file...\n";
                     negativeValuesContainer.innerText = "";  // Clear previous results
+                    summaryContainer.innerText = "";  // Clear previous summary
 
                     let negativeValues = []; // To store all negative values found
                     let firstNegativeSkipped = false; // Flag to skip first negative value
@@ -73,6 +76,17 @@
                         negativeValues.forEach(entry => {
                             negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
                         });
+
+                        // Create the summary of negative values
+                        const totalNegativeValues = negativeValues.length;
+                        const sumNegativeValues = negativeValues.reduce((acc, entry) => acc + entry.value, 0);
+                        const averageNegativeValue = sumNegativeValues / totalNegativeValues;
+
+                        // Display the summary
+                        summaryContainer.innerText += `\nSummary of Negative Values:\n`;
+                        summaryContainer.innerText += `Total Count of Negative Values: ${totalNegativeValues}\n`;
+                        summaryContainer.innerText += `Sum of Negative Values: ${sumNegativeValues.toFixed(2)}\n`;
+                        summaryContainer.innerText += `Average of Negative Values: ${averageNegativeValue.toFixed(2)}\n`;
                     } else {
                         negativeValuesContainer.innerText += "No negative values found (after ignoring the first negative value).\n";
                     }
