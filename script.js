@@ -33,7 +33,8 @@ function processFiles() {
             // Iterate over rows in the sheet
             rows.forEach((row, index) => {
                 row.forEach((cell, colIndex) => {
-                    if (cell && cell.toString().includes("Skupaj")) {
+                    // Convert cell to string and trim it, perform case-insensitive check for 'Skupaj'
+                    if (typeof cell === 'string' && cell.trim().toLowerCase().includes("skupaj")) {
                         foundSkupaj = true;
                         monthName = getMonthName(selectedMonths[index]); // Map to Slovenian month
                         const leftValue = rows[index][colIndex - 1];
