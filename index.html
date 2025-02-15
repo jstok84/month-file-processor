@@ -94,7 +94,6 @@
                 const negativeValues = [];
                 let firstNegativeSkipped = false;
 
-                // Batch process rows for better performance
                 worksheet.eachRow((row, rowIndex) => {
                     row.values.forEach((cell, colIndex) => {
                         if (typeof cell === 'number' && cell < 0) {
@@ -103,14 +102,14 @@
                                 return;
                             }
 
-                            // Apply transformation
                             const transformedValue = cell === -34.43 || cell === -43.31 ? 
                                 (cell / 3) * 2 : cell;
 
                             negativeValues.push({
                                 row: rowIndex,
                                 col: colIndex,
-                                value: transformedValue
+                                value: transformedValue,
+                                fileName: fileName
                             });
                         }
                     });
@@ -134,13 +133,17 @@
                     this.allNegativeValues.push(entry);
 
                     const monthName = `Month ${entry.row}`;
-                    this.data.push({ month: monthName, value: entry.value });
+                    this.data.push({ 
+                        month: monthName, 
+                        value: entry.value,
+                        fileName: entry.fileName 
+                    });
                 });
             }
 
             outputResults() {
                 if (this.data.length === 0) return;
-            
+
                 let finalData = [...this.data];
                 let results = "Processed Data:\n";
                 
@@ -157,7 +160,7 @@
                     fileSummary[fileName].values.push(item.value);
                     fileSummary[fileName].sum += item.value;
                 });
-            
+
                 // Print data and summaries for each file
                 Object.entries(fileSummary).forEach(([fileName, summary]) => {
                     results += `\n=== ${fileName} ===\n`;
@@ -166,24 +169,24 @@
                     });
                     results += `Total: ${summary.sum.toFixed(2)}\n\n`;
                 });
-            
+
                 // Calculate and display total sum
                 const totalSum = finalData.reduce((acc, d) => acc + d.value, 0);
                 results += `Total Sum: ${totalSum.toFixed(2)}`;
-            
+
                 // Divisor calculation
                 const divisor = 499;
                 let remainder = Math.abs(totalSum);
                 const divisorResults = [];
-            
+
                 while (remainder >= divisor) {
                     remainder -= divisor;
                     divisorResults.push(divisor);
                 }
-            
+
                 divisorResults.push(remainder);
                 results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
-            
+
                 this.summaryContainer.innerText = results;
             }
         }
