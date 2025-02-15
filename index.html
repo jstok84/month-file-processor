@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Processor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>Excel File Processor</h1>
+    <p>Select the months to process:</p>
+
+    <!-- Month Selection Dropdown (multi-select) -->
+    <select id="month-selection" multiple>
+        <option value="1">Januar</option>
+        <option value="2">Februar</option>
+        <option value="3">Marec</option>
+        <option value="4">April</option>
+        <option value="5">Maj</option>
+        <option value="6">Junij</option>
+        <option value="7">Julij</option>
+        <option value="8">Avgust</option>
+        <option value="9">September</option>
+        <option value="10">Oktober</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+    </select>
+
+    <br>
+    <p>Select the Excel files:</p>
+    <input type="file" id="file-input" multiple />
+    <button onclick="processFiles()">Process Files</button>
+
+    <h2>Results</h2>
+    <pre id="results"></pre>
+
+    <script src="script.js"></script>
+</body>
+</html>
