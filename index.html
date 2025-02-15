@@ -56,6 +56,11 @@
                                         return; // Skip this negative value
                                     }
 
+                                    // Apply value transformation if it's -34.43 or -43.31
+                                    if (cell === -34.43 || cell === -43.31) {
+                                        cell = (cell / 3) * 2;
+                                    }
+
                                     // Store the negative value (if it is not the first one)
                                     negativeValues.push({
                                         row: rowIndex,
