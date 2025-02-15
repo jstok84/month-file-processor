@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Excel and Extract Negative Values</title>
+    <title>Display Excel with ExcelJS and Extract Negative Values</title>
 </head>
 <body>
     <h2>Select an Excel file to display its content and extract negative values</h2>
@@ -11,7 +11,7 @@
     <div id="file-content" style="white-space: pre-wrap; margin-top: 20px;"></div>
     <div id="negative-values" style="white-space: pre-wrap; margin-top: 20px;"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
 
     <script>
         document.getElementById('file-input').addEventListener('change', function(event) {
@@ -24,52 +24,51 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = e.target.result;
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = new ExcelJS.Workbook();
+                workbook.xlsx.load(data).then(function() {
+                    const fileContentContainer = document.getElementById('file-content');
+                    const negativeValuesContainer = document.getElementById('negative-values');
+                    fileContentContainer.innerText = "Processing file...\n";
+                    negativeValuesContainer.innerText = "";  // Clear previous results
 
-                const fileContentContainer = document.getElementById('file-content');
-                const negativeValuesContainer = document.getElementById('negative-values');
-                fileContentContainer.innerText = "Processing file...\n";
-                negativeValuesContainer.innerText = "";  // Clear previous results
+                    let negativeValues = []; // To store all negative values found
 
-                let negativeValues = []; // To store all negative values found
+                    // Loop through all sheets in the workbook
+                    workbook.worksheets.forEach((worksheet) => {
+                        fileContentContainer.innerText += `\nSheet: ${worksheet.name}\n`;
 
-                // Loop through all sheets in the workbook
-                workbook.SheetNames.forEach(sheetName => {
-                    const sheet = workbook.Sheets[sheetName];
-                    fileContentContainer.innerText += `\nSheet: ${sheetName}\n`;
+                        // Iterate through all rows and columns in the sheet
+                        worksheet.eachRow((row, rowIndex) => {
+                            const rowValues = [];
+                            row.values.forEach((cell, colIndex) => {
+                                // Display the cell's value
+                                rowValues.push(cell);
+                                
+                                // Check if the cell is a number and is negative
+                                if (typeof cell === 'number' && cell < 0) {
+                                    negativeValues.push({
+                                        row: rowIndex,
+                                        col: colIndex,
+                                        value: cell
+                                    });
+                                }
+                            });
 
-                    // Convert sheet data to JSON (header: 1 means no header row, just raw values)
-                    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                    // Display the entire content of the sheet
-                    jsonData.forEach((row, rowIndex) => {
-                        fileContentContainer.innerText += `Row ${rowIndex + 1}: ${row.join("\t")}\n`;
-                    });
-
-                    // Iterate through all rows and columns to find negative values
-                    jsonData.forEach((row, rowIndex) => {
-                        row.forEach((cell, colIndex) => {
-                            // Check if the cell is a number and is negative
-                            if (typeof cell === 'number' && cell < 0) {
-                                negativeValues.push({
-                                    row: rowIndex + 1,
-                                    col: colIndex + 1,
-                                    value: cell
-                                });
-                            }
+                            // Display the row values in the file content
+                            fileContentContainer.innerText += `Row ${rowIndex}: ${rowValues.join("\t")}\n`;
                         });
                     });
-                });
 
-                // Output the negative values
-                if (negativeValues.length > 0) {
-                    negativeValuesContainer.innerText += "\nNegative Values Found:\n";
-                    negativeValues.forEach(entry => {
-                        negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
-                    });
-                } else {
-                    negativeValuesContainer.innerText += "No negative values found.\n";
-                }
+                    // Output the negative values
+                    if (negativeValues.length > 0) {
+                        negativeValuesContainer.innerText += "\nNegative Values Found:\n";
+                        negativeValues.forEach(entry => {
+                            negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
+                        });
+                    } else {
+                        negativeValuesContainer.innerText += "No negative values found.\n";
+                    }
+                });
             };
             reader.readAsArrayBuffer(file);
         });
