@@ -3,35 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Processor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+    <title>Display Excel Data</title>
 </head>
 <body>
-    <h1>Excel File Processor</h1>
-    <p>Select the months to process:</p>
+    <h2>Select an Excel file to display its content</h2>
+    <input type="file" id="file-input" accept=".xlsx, .xls" />
+    <div id="results" style="white-space: pre-wrap;"></div>
 
-    <!-- Month Selection Checkboxes -->
-    <label><input type="checkbox" value="1"> Januar</label><br>
-    <label><input type="checkbox" value="2"> Februar</label><br>
-    <label><input type="checkbox" value="3"> Marec</label><br>
-    <label><input type="checkbox" value="4"> April</label><br>
-    <label><input type="checkbox" value="5"> Maj</label><br>
-    <label><input type="checkbox" value="6"> Junij</label><br>
-    <label><input type="checkbox" value="7"> Julij</label><br>
-    <label><input type="checkbox" value="8"> Avgust</label><br>
-    <label><input type="checkbox" value="9"> September</label><br>
-    <label><input type="checkbox" value="10"> Oktober</label><br>
-    <label><input type="checkbox" value="11"> November</label><br>
-    <label><input type="checkbox" value="12"> December</label><br>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.0/exceljs.min.js"></script>
 
-    <br>
-    <p>Select the Excel files:</p>
-    <input type="file" id="file-input" multiple />
-    <button onclick="processFiles()">Process Files</button>
+    <script>
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
 
-    <h2>Results</h2>
-    <pre id="results"></pre>
+            if (!file) {
+                alert('Please select a file!');
+                return;
+            }
 
-    <script src="script.js"></script>
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    // Create a new instance of ExcelJS Workbook
+                    const workbook = new ExcelJS.Workbook();
+                    workbook.xlsx.load(e.target.result).then(function() {
+                        const resultsContainer = document.getElementById('results');
+                        resultsContainer.innerText = "Processing file...\n";
+
+                        // Loop through each sheet in the workbook
+                        workbook.eachSheet(function(sheet, sheetId) {
+                            resultsContainer.innerText += `\nSheet: ${sheet.name}\n`;
+
+                            // Loop through all rows in the sheet
+                            sheet.eachRow((row, rowNumber) => {
+                                let rowData = row.values.join(' | '); // Join cells with a separator
+                                resultsContainer.innerText += `Row ${rowNumber}: ${rowData}\n`;
+                            });
+                        });
+                    });
+                } catch (error) {
+                    console.error("Error reading the Excel file:", error);
+                    alert('Error reading the Excel file.');
+                }
+            };
+
+            // Read the file as binary string
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
 </body>
 </html>
