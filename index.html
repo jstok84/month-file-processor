@@ -25,8 +25,9 @@
 
             reader.onload = function(e) {
                 try {
-                    // Use js-xlsx (XLSX) to read the file
-                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    // Read the Excel file as an ArrayBuffer
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
                     const resultsContainer = document.getElementById('results');
                     resultsContainer.innerText = "Processing file...\n";
 
@@ -34,18 +35,19 @@
                     workbook.SheetNames.forEach(sheetName => {
                         const sheet = workbook.Sheets[sheetName];
                         
-                        // Convert the sheet to raw text (tab-separated)
+                        // Convert the sheet to raw text (tab-separated) for debugging
                         let sheetText = XLSX.utils.sheet_to_txt(sheet);
                         resultsContainer.innerText += `\nSheet: ${sheetName}\n`;
                         resultsContainer.innerText += sheetText + "\n\n";
                     });
                 } catch (error) {
                     console.error("Error reading the Excel file:", error);
-                    alert('Error reading the Excel file.');
+                    alert('Error reading the Excel file. Check the console for details.');
                 }
             };
 
-            reader.readAsBinaryString(file);
+            // Read the file as ArrayBuffer instead of BinaryString
+            reader.readAsArrayBuffer(file);
         });
     </script>
 </body>
