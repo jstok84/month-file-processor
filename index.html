@@ -47,8 +47,14 @@
                 return;
             }
 
+            if (files.length === 0) {
+                resultsContainer.innerText = "Please upload a file.";
+                return;
+            }
+
             resultsContainer.innerText = "Processing files...\n";
 
+            // Process each selected file
             for (let file of files) {
                 let reader = new FileReader();
                 reader.onload = function(event) {
@@ -57,24 +63,23 @@
                         let sheetName = workbook.worksheets[0].name; // Assuming the first sheet
                         let sheet = workbook.getWorksheet(sheetName);
 
-                        let monthName = "Unknown"; // Default in case of no month
                         let foundData = false;
 
-                        // Iterate through all rows
+                        // Iterate through all rows in the sheet
                         sheet.eachRow((row, rowIndex) => {
                             row.eachCell((cell, colIndex) => {
                                 if (typeof cell.value === 'number' && cell.value < 0) {
                                     // Ignore first negative value
                                     if (data.length === 0) return;
 
-                                    // If negative value is found, check if it is one of the specified values
+                                    // If negative value is found, check if it matches specific values
                                     if (cell.value === -34.43 || cell.value === -43.31) {
-                                        cell.value = (cell.value / 3) * 2;
+                                        cell.value = (cell.value / 3) * 2; // Apply formula to value
                                     }
 
                                     // Check if the row matches the selected months and store the data
                                     if (selectedMonths.includes(rowIndex)) {
-                                        monthName = getMonthName(selectedMonths[rowIndex]);
+                                        let monthName = getMonthName(selectedMonths[rowIndex]);
                                         data.push({ month: monthName, value: cell.value });
                                         totalSum += cell.value;
                                         foundData = true;
@@ -94,7 +99,7 @@
                         outputResults();
                     });
                 };
-                reader.readAsArrayBuffer(file);
+                reader.readAsArrayBuffer(file); // Use ArrayBuffer to read the file
             }
 
             function outputResults() {
