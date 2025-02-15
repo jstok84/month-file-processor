@@ -140,59 +140,50 @@
 
             outputResults() {
                 if (this.data.length === 0) return;
-        
+            
                 let finalData = [...this.data];
                 let results = "Processed Data:\n";
                 
-                // Group data by month for summaries
-                const monthlySummary = {};
+                // Group data by file name
+                const fileSummary = {};
                 finalData.forEach(item => {
-                    if (!monthlySummary[item.month]) {
-                        monthlySummary[item.month] = {
-                            count: 0,
-                            sum: 0,
-                            values: []
+                    const fileName = item.fileName;
+                    if (!fileSummary[fileName]) {
+                        fileSummary[fileName] = {
+                            values: [],
+                            sum: 0
                         };
                     }
-                    monthlySummary[item.month].count++;
-                    monthlySummary[item.month].sum += item.value;
-                    monthlySummary[item.month].values.push(item.value);
+                    fileSummary[fileName].values.push(item.value);
+                    fileSummary[fileName].sum += item.value;
                 });
-        
-                // Batch process months for better performance
-                const batchSize = 100;
-                for (let i = 0; i < finalData.length; i += batchSize) {
-                    const batch = finalData.slice(i, i + batchSize);
-                    results += batch.map(d => 
-                        `Month: ${d.month}, Value: ${d.value}`).join('\n') + '\n';
-                }
-        
-                // Add monthly summaries
-                results += "\nMesečni seštevek:\n";
-                Object.entries(monthlySummary).forEach(([month, summary]) => {
-                    results += `\n${month}:`;
-                    results += `\n  Count: ${summary.count}`;
-                    results += `\n  Total: ${summary.sum.toFixed(2)}`;
-                    results += `\n  Average: ${(summary.sum / summary.count).toFixed(2)}`;
+            
+                // Print data and summaries for each file
+                Object.entries(fileSummary).forEach(([fileName, summary]) => {
+                    results += `\n=== ${fileName} ===\n`;
+                    summary.values.forEach(value => {
+                        results += `Value: ${value}\n`;
+                    });
+                    results += `Total: ${summary.sum.toFixed(2)}\n\n`;
                 });
-        
+            
                 // Calculate and display total sum
                 const totalSum = finalData.reduce((acc, d) => acc + d.value, 0);
-                results += `\n\nTotal Sum: ${totalSum.toFixed(2)}`;
-        
+                results += `Total Sum: ${totalSum.toFixed(2)}`;
+            
                 // Divisor calculation
                 const divisor = 499;
                 let remainder = Math.abs(totalSum);
                 const divisorResults = [];
-        
+            
                 while (remainder >= divisor) {
                     remainder -= divisor;
                     divisorResults.push(divisor);
                 }
-        
+            
                 divisorResults.push(remainder);
-                results += `\n\nApoeni:\n${divisorResults.join('\n')}`;
-        
+                results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
+            
                 this.summaryContainer.innerText = results;
             }
         }
