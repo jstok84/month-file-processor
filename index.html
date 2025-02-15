@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extract Negative Values from Excel</title>
+    <title>Display Excel and Extract Negative Values</title>
 </head>
 <body>
-    <h2>Select an Excel file to display negative values</h2>
+    <h2>Select an Excel file to display its content and extract negative values</h2>
     <input type="file" id="file-input" accept=".xlsx, .xls" />
-    <div id="results" style="white-space: pre-wrap;"></div>
+    <div id="file-content" style="white-space: pre-wrap; margin-top: 20px;"></div>
+    <div id="negative-values" style="white-space: pre-wrap; margin-top: 20px;"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
 
@@ -25,20 +26,27 @@
                 const data = e.target.result;
                 const workbook = XLSX.read(data, { type: 'array' });
 
-                const resultsContainer = document.getElementById('results');
-                resultsContainer.innerText = "Processing file...\n";
+                const fileContentContainer = document.getElementById('file-content');
+                const negativeValuesContainer = document.getElementById('negative-values');
+                fileContentContainer.innerText = "Processing file...\n";
+                negativeValuesContainer.innerText = "";  // Clear previous results
 
                 let negativeValues = []; // To store all negative values found
 
                 // Loop through all sheets in the workbook
                 workbook.SheetNames.forEach(sheetName => {
                     const sheet = workbook.Sheets[sheetName];
-                    resultsContainer.innerText += `\nSheet: ${sheetName}\n`;
+                    fileContentContainer.innerText += `\nSheet: ${sheetName}\n`;
 
                     // Convert sheet data to JSON (header: 1 means no header row, just raw values)
                     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                    // Iterate through all rows and columns
+                    // Display the entire content of the sheet
+                    jsonData.forEach((row, rowIndex) => {
+                        fileContentContainer.innerText += `Row ${rowIndex + 1}: ${row.join("\t")}\n`;
+                    });
+
+                    // Iterate through all rows and columns to find negative values
                     jsonData.forEach((row, rowIndex) => {
                         row.forEach((cell, colIndex) => {
                             // Check if the cell is a number and is negative
@@ -55,12 +63,12 @@
 
                 // Output the negative values
                 if (negativeValues.length > 0) {
-                    resultsContainer.innerText += "\nNegative Values Found:\n";
+                    negativeValuesContainer.innerText += "\nNegative Values Found:\n";
                     negativeValues.forEach(entry => {
-                        resultsContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
+                        negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
                     });
                 } else {
-                    resultsContainer.innerText += "No negative values found.\n";
+                    negativeValuesContainer.innerText += "No negative values found.\n";
                 }
             };
             reader.readAsArrayBuffer(file);
