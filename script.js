@@ -29,11 +29,16 @@ function processFiles() {
             let sheetName = workbook.SheetNames[0];
             let sheet = workbook.Sheets[sheetName];
 
+            // Log the raw sheet data to inspect the content
+            console.log(`Raw data from sheet [${sheetName}]:`, sheet);
+
             let rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            // Log the rows to see how the data looks
+            console.log("Rows read from sheet:", rows);
+
             let foundSkupaj = false;
             let monthName = "Unknown"; // Default in case of no month
-
-            console.log("Processing file:", file.name);
 
             // Iterate over rows in the sheet
             rows.forEach((row, index) => {
