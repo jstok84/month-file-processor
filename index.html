@@ -32,14 +32,15 @@
             let totalNegativeValues = 0;
             let sumNegativeValues = 0;
             let allNegativeValues = []; // Collect all negative values across files
+            let data = [];
 
             // Loop through all selected files
             Array.from(files).forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const data = e.target.result;
+                    const dataBuffer = e.target.result;
                     const workbook = new ExcelJS.Workbook();
-                    workbook.xlsx.load(data).then(function() {
+                    workbook.xlsx.load(dataBuffer).then(function() {
                         fileContentContainer.innerText += `\nProcessing file: ${file.name}\n`;
 
                         let negativeValues = []; // To store negative values for this file
@@ -65,7 +66,7 @@
                                         }
 
                                         // Apply value transformation if it's 34.43 or -43.31
-                                        if (cell === -34.43 || cell === -43.31) {
+                                        if (cell === 34.43 || cell === -43.31) {
                                             cell = (cell / 3) * 2;
                                         }
 
@@ -94,23 +95,55 @@
                             totalNegativeValues += negativeValues.length;
                             sumNegativeValues += negativeValues.reduce((acc, entry) => acc + entry.value, 0);
                             allNegativeValues.push(...negativeValues);
+
+                            // Collect data for month-wise processing (data storage logic)
+                            negativeValues.forEach(entry => {
+                                const monthName = `Month ${entry.row}`;  // Replace with real month handling
+                                data.push({ month: monthName, value: entry.value });
+                            });
                         } else {
                             negativeValuesContainer.innerText += `No negative values found in ${file.name} (after ignoring the first negative value).\n`;
                         }
 
                         // Final summary output
                         if (allNegativeValues.length > 0) {
-                            const averageNegativeValue = sumNegativeValues / totalNegativeValues;
-
-                            summaryContainer.innerText += `\nSummary of Negative Values across all files:\n`;
-                            summaryContainer.innerText += `Total Count of Negative Values: ${totalNegativeValues}\n`;
-                            summaryContainer.innerText += `Sum of Negative Values: ${sumNegativeValues.toFixed(2)}\n`;
-                            summaryContainer.innerText += `Average of Negative Values: ${averageNegativeValue.toFixed(2)}\n`;
+                            outputResults(); // Call the outputResults function after processing all files
                         }
                     });
                 };
                 reader.readAsArrayBuffer(file); // Use ArrayBuffer to read the file
             });
+
+            // Function to output results for month-wise data processing
+            function outputResults() {
+                if (data.length > 0) {
+                    let finalData = [...data];
+                    let results = "Processed Data:\n";
+                    finalData.forEach(d => {
+                        results += `Month: ${d.month}, Value: ${d.value}\n`;
+                    });
+
+                    // Calculate sum and append to results
+                    let sum = finalData.reduce((acc, d) => acc + d.value, 0);
+                    results += `\nTotal Sum: ${sum.toFixed(2)}`;
+
+                    // Prepare results for divisor calculation (example used 499)
+                    const divisor = 499;
+                    let remainder = Math.abs(sum);
+                    let divisorResults = [];
+
+                    while (remainder >= divisor) {
+                        remainder -= divisor;
+                        divisorResults.push(divisor);
+                    }
+
+                    divisorResults.push(remainder);
+                    results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
+
+                    // Display the results
+                    summaryContainer.innerText = results;
+                }
+            }
         });
     </script>
 </body>
