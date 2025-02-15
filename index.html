@@ -32,11 +32,15 @@
                     const resultsContainer = document.getElementById('results');
                     resultsContainer.innerText = "Processing file...\n";
 
+                    // Loop through all worksheets in the workbook
                     workbook.worksheets.forEach(sheet => {
                         resultsContainer.innerText += `\nSheet: ${sheet.name}\n`;
 
+                        // Loop through each row in the sheet
                         sheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-                            resultsContainer.innerText += `Row ${rowNumber}: ${row.values.join("\t")}\n`;
+                            // We extract only the cell values (skip row metadata)
+                            const rowData = row.values.slice(1);  // Skip the first entry (indexing starts at 1)
+                            resultsContainer.innerText += `Row ${rowNumber}: ${rowData.join("\t")}\n`;
                         });
                     });
 
