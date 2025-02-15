@@ -19,25 +19,16 @@ function processFiles() {
                 // Read the file as binary string
                 const workbook = XLSX.read(event.target.result, { type: 'binary' });
 
-                // Log the number of sheets in the workbook
-                console.log(`The workbook contains ${workbook.SheetNames.length} sheets:`, workbook.SheetNames);
-
-                // Loop through each sheet in the workbook and print all raw data
+                // Loop through each sheet in the workbook
                 workbook.SheetNames.forEach(sheetName => {
                     let sheet = workbook.Sheets[sheetName];
-                    console.log(`Sheet Name: ${sheetName}`);
 
-                    // Convert the sheet to JSON (row-based, for easier reading)
-                    let rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                    console.log(`Rows from sheet [${sheetName}]:`, rows);
+                    // Convert the sheet to raw text (tab-separated)
+                    let sheetText = XLSX.utils.sheet_to_txt(sheet);
 
-                    // Display the raw content in the results container
-                    resultsContainer.innerText += `\nContent from sheet [${sheetName}]:\n`;
-
-                    // Print each row of data
-                    rows.forEach((row, index) => {
-                        resultsContainer.innerText += `Row ${index + 1}: ${row.join(' | ')}\n`;
-                    });
+                    // Display the sheet's raw text content in the results container
+                    resultsContainer.innerText += `\nSheet: ${sheetName}\n`;
+                    resultsContainer.innerText += sheetText + "\n\n";
                 });
             } catch (error) {
                 console.error("Error reading the Excel file:", error);
@@ -47,4 +38,3 @@ function processFiles() {
         reader.readAsBinaryString(file);
     }
 }
-
