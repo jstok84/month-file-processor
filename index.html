@@ -140,10 +140,25 @@
 
             outputResults() {
                 if (this.data.length === 0) return;
-
+        
                 let finalData = [...this.data];
                 let results = "Processed Data:\n";
                 
+                // Group data by month for summaries
+                const monthlySummary = {};
+                finalData.forEach(item => {
+                    if (!monthlySummary[item.month]) {
+                        monthlySummary[item.month] = {
+                            count: 0,
+                            sum: 0,
+                            values: []
+                        };
+                    }
+                    monthlySummary[item.month].count++;
+                    monthlySummary[item.month].sum += item.value;
+                    monthlySummary[item.month].values.push(item.value);
+                });
+        
                 // Batch process months for better performance
                 const batchSize = 100;
                 for (let i = 0; i < finalData.length; i += batchSize) {
@@ -151,22 +166,33 @@
                     results += batch.map(d => 
                         `Month: ${d.month}, Value: ${d.value}`).join('\n') + '\n';
                 }
-
-                const sum = finalData.reduce((acc, d) => acc + d.value, 0);
-                results += `\nTotal Sum: ${sum.toFixed(2)}`;
-
+        
+                // Add monthly summaries
+                results += "\nMesečni seštevek:\n";
+                Object.entries(monthlySummary).forEach(([month, summary]) => {
+                    results += `\n${month}:`;
+                    results += `\n  Count: ${summary.count}`;
+                    results += `\n  Total: ${summary.sum.toFixed(2)}`;
+                    results += `\n  Average: ${(summary.sum / summary.count).toFixed(2)}`;
+                });
+        
+                // Calculate and display total sum
+                const totalSum = finalData.reduce((acc, d) => acc + d.value, 0);
+                results += `\n\nTotal Sum: ${totalSum.toFixed(2)}`;
+        
+                // Divisor calculation
                 const divisor = 499;
-                let remainder = Math.abs(sum);
+                let remainder = Math.abs(totalSum);
                 const divisorResults = [];
-
+        
                 while (remainder >= divisor) {
                     remainder -= divisor;
                     divisorResults.push(divisor);
                 }
-
+        
                 divisorResults.push(remainder);
-                results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
-
+                results += `\n\nApoeni:\n${divisorResults.join('\n')}`;
+        
                 this.summaryContainer.innerText = results;
             }
         }
