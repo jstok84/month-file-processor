@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Excel Data</title>
+    <title>Display Excel Data with js-xlsx</title>
 </head>
 <body>
     <h2>Select an Excel file to display its content</h2>
     <input type="file" id="file-input" accept=".xlsx, .xls" />
     <div id="results" style="white-space: pre-wrap;"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
     <script>
         document.getElementById('file-input').addEventListener('change', function(event) {
@@ -25,22 +25,19 @@
 
             reader.onload = function(e) {
                 try {
-                    // Create a new instance of ExcelJS Workbook
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.xlsx.load(e.target.result).then(function() {
-                        const resultsContainer = document.getElementById('results');
-                        resultsContainer.innerText = "Processing file...\n";
+                    // Use js-xlsx (XLSX) to read the file
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    const resultsContainer = document.getElementById('results');
+                    resultsContainer.innerText = "Processing file...\n";
 
-                        // Loop through each sheet in the workbook
-                        workbook.eachSheet(function(sheet, sheetId) {
-                            resultsContainer.innerText += `\nSheet: ${sheet.name}\n`;
-
-                            // Loop through all rows in the sheet
-                            sheet.eachRow((row, rowNumber) => {
-                                let rowData = row.values.join(' | '); // Join cells with a separator
-                                resultsContainer.innerText += `Row ${rowNumber}: ${rowData}\n`;
-                            });
-                        });
+                    // Loop through each sheet in the workbook
+                    workbook.SheetNames.forEach(sheetName => {
+                        const sheet = workbook.Sheets[sheetName];
+                        
+                        // Convert the sheet to raw text (tab-separated)
+                        let sheetText = XLSX.utils.sheet_to_txt(sheet);
+                        resultsContainer.innerText += `\nSheet: ${sheetName}\n`;
+                        resultsContainer.innerText += sheetText + "\n\n";
                     });
                 } catch (error) {
                     console.error("Error reading the Excel file:", error);
@@ -48,8 +45,7 @@
                 }
             };
 
-            // Read the file as binary string
-            reader.readAsArrayBuffer(file);
+            reader.readAsBinaryString(file);
         });
     </script>
 </body>
