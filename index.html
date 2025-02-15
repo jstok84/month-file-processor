@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Excel Data with ExcelJS</title>
+    <title>Display Excel Data with ExcelJS (Formula Handling)</title>
 </head>
 <body>
     <h2>Select an Excel file to display its content</h2>
@@ -38,8 +38,17 @@
 
                         // Loop through each row in the sheet
                         sheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-                            // We extract only the cell values (skip row metadata)
-                            const rowData = row.values.slice(1);  // Skip the first entry (indexing starts at 1)
+                            // Extract values from each cell in the row
+                            const rowData = row.values.slice(1).map(cell => {
+                                if (cell && cell.formula) {
+                                    // If the cell has a formula, use its calculated value
+                                    return cell.result || 'Formula Error'; // cell.result holds the computed value
+                                } else {
+                                    // Otherwise, just return the regular cell value
+                                    return cell;
+                                }
+                            });
+
                             resultsContainer.innerText += `Row ${rowNumber}: ${rowData.join("\t")}\n`;
                         });
                     });
