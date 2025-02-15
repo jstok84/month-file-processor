@@ -5,8 +5,8 @@ function getMonthName(monthNumber) {
 }
 
 function processFiles() {
-    const selectedMonths = Array.from(document.getElementById('month-selection').selectedOptions)
-        .map(option => parseInt(option.value)); // Get selected month values
+    const selectedMonths = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+        .map(checkbox => parseInt(checkbox.value)); // Get selected month values
     const files = document.getElementById('file-input').files;
     const resultsContainer = document.getElementById('results');
     let data = [];
