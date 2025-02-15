@@ -22,7 +22,7 @@ function processFiles() {
                 // Log the number of sheets in the workbook
                 console.log(`The workbook contains ${workbook.SheetNames.length} sheets:`, workbook.SheetNames);
 
-                // Loop through each sheet in the workbook and log its data
+                // Loop through each sheet in the workbook and print all raw data
                 workbook.SheetNames.forEach(sheetName => {
                     let sheet = workbook.Sheets[sheetName];
                     console.log(`Sheet Name: ${sheetName}`);
@@ -34,6 +34,7 @@ function processFiles() {
                     // Display the raw content in the results container
                     resultsContainer.innerText += `\nContent from sheet [${sheetName}]:\n`;
 
+                    // Print each row of data
                     rows.forEach((row, index) => {
                         resultsContainer.innerText += `Row ${index + 1}: ${row.join(' | ')}\n`;
                     });
@@ -46,3 +47,4 @@ function processFiles() {
         reader.readAsBinaryString(file);
     }
 }
+
