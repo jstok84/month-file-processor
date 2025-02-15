@@ -17,6 +17,9 @@ function processFiles() {
         return;
     }
 
+    // Log selected months for debugging
+    console.log("Selected months:", selectedMonths);
+    
     resultsContainer.innerText = "Processing files...\n";
 
     for (let file of files) {
@@ -30,14 +33,22 @@ function processFiles() {
             let foundSkupaj = false;
             let monthName = "Unknown"; // Default in case of no month
 
+            console.log("Processing file:", file.name);
+
             // Iterate over rows in the sheet
             rows.forEach((row, index) => {
                 row.forEach((cell, colIndex) => {
+                    // Log cell content for debugging
+                    console.log(`Checking cell [${index}][${colIndex}]:`, cell);
+
                     // Convert cell to string and trim it, perform case-insensitive check for 'Skupaj'
                     if (typeof cell === 'string' && cell.trim().toLowerCase().includes("skupaj")) {
                         foundSkupaj = true;
                         monthName = getMonthName(selectedMonths[index]); // Map to Slovenian month
                         const leftValue = rows[index][colIndex - 1];
+                        
+                        console.log(`Found 'Skupaj' in row ${index}, col ${colIndex}. Left value: ${leftValue}`);
+                        
                         if (leftValue) {
                             data.push({ month: monthName, value: parseFloat(leftValue) });
                             totalSum += parseFloat(leftValue);
