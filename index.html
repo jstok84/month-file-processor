@@ -63,11 +63,19 @@
                         let sheetName = workbook.worksheets[0].name; // Assuming the first sheet
                         let sheet = workbook.getWorksheet(sheetName);
 
+                        console.log(`Processing Sheet: ${sheetName}`);
+                        console.log("Sheet Data:", sheet);
+
                         let foundData = false;
 
-                        // Iterate through all rows in the sheet
+                        // Iterate through all rows in the sheet and log data for debugging
                         sheet.eachRow((row, rowIndex) => {
+                            console.log(`Row ${rowIndex}:`, row.values);  // Log each row
+
                             row.eachCell((cell, colIndex) => {
+                                console.log(`Cell ${colIndex}: ${cell.value}`);  // Log each cell
+
+                                // Check for negative numbers and process accordingly
                                 if (typeof cell.value === 'number' && cell.value < 0) {
                                     // Ignore first negative value
                                     if (data.length === 0) return;
