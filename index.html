@@ -4,146 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Excel with ExcelJS and Extract Negative Values</title>
+    <style>
+        #file-content, #negative-values, #summary {
+            white-space: pre-wrap;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        #negative-values { color: red; }
+    </style>
 </head>
 <body>
     <h2>Select Excel files to display their content and extract negative values</h2>
     <input type="file" id="file-input" multiple accept=".xlsx, .xls" />
-    <div id="file-content" style="white-space: pre-wrap; margin-top: 20px;"></div>
-    <div id="negative-values" style="white-space: pre-wrap; margin-top: 20px;"></div>
-    <div id="summary" style="white-space: pre-wrap; margin-top: 20px;"></div>
+    <div id="file-content"></div>
+    <div id="negative-values"></div>
+    <div id="summary"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.1/exceljs.min.js"></script>
-
     <script>
-        document.getElementById('file-input').addEventListener('change', function(event) {
-            const files = event.target.files;
-            if (files.length === 0) {
-                alert('Please select a file!');
-                return;
+        class ExcelProcessor {
+            constructor() {
+                // Cache DOM elements
+                this.fileContentContainer = document.getElementById('file-content');
+                this.negativeValuesContainer = document.getElementById('negative-values');
+                this.summaryContainer = document.getElementById('summary');
+
+                // Initialize counters
+                this.totalNegativeValues = 0;
+                this.sumNegativeValues = 0;
+                this.allNegativeValues = [];
+                this.data = [];
+
+                // Bind event listener
+                document.getElementById('file-input').addEventListener('change', this.handleFileInput.bind(this));
             }
 
-            const fileContentContainer = document.getElementById('file-content');
-            const negativeValuesContainer = document.getElementById('negative-values');
-            const summaryContainer = document.getElementById('summary');
-            fileContentContainer.innerText = "Processing files...\n";
-            negativeValuesContainer.innerText = "";  // Clear previous results
-            summaryContainer.innerText = "";  // Clear previous summary
+            async handleFileInput(event) {
+                const files = Array.from(event.target.files);
+                if (files.length === 0) {
+                    alert('Please select a file!');
+                    return;
+                }
 
-            let totalNegativeValues = 0;
-            let sumNegativeValues = 0;
-            let allNegativeValues = []; // Collect all negative values across files
-            let data = [];
-
-            // Loop through all selected files
-            Array.from(files).forEach((file) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const dataBuffer = e.target.result;
-                    const workbook = new ExcelJS.Workbook();
-                    workbook.xlsx.load(dataBuffer).then(function() {
-                        fileContentContainer.innerText += `\nProcessing file: ${file.name}\n`;
-
-                        let negativeValues = []; // To store negative values for this file
-                        let firstNegativeSkipped = false; // Flag to skip first negative value
-
-                        // Loop through all sheets in the workbook
-                        workbook.worksheets.forEach((worksheet) => {
-                            fileContentContainer.innerText += `\nSheet: ${worksheet.name}\n`;
-
-                            // Iterate through all rows and columns in the sheet
-                            worksheet.eachRow((row, rowIndex) => {
-                                const rowValues = [];
-                                row.values.forEach((cell, colIndex) => {
-                                    // Display the cell's value
-                                    rowValues.push(cell);
-
-                                    // Check if the cell is a number and is negative
-                                    if (typeof cell === 'number' && cell < 0) {
-                                        // Skip the first negative value
-                                        if (!firstNegativeSkipped) {
-                                            firstNegativeSkipped = true;
-                                            return; // Skip this negative value
-                                        }
-
-                                        // Apply value transformation if it's 34.43 or -43.31
-                                        if (cell === -34.43 || cell === -43.31) {
-                                            cell = (cell / 3) * 2;
-                                        }
-
-                                        // Store the negative value (if it is not the first one)
-                                        negativeValues.push({
-                                            row: rowIndex,
-                                            col: colIndex,
-                                            value: cell
-                                        });
-                                    }
-                                });
-
-                                // Display the row values in the file content
-                                fileContentContainer.innerText += `Row ${rowIndex}: ${rowValues.join("\t")}\n`;
-                            });
-                        });
-
-                        // Output the negative values for this file
-                        if (negativeValues.length > 0) {
-                            negativeValuesContainer.innerText += `\nNegative Values Found in ${file.name} (ignoring the first negative value):\n`;
-                            negativeValues.forEach(entry => {
-                                negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
-                            });
-
-                            // Add to the overall summary
-                            totalNegativeValues += negativeValues.length;
-                            sumNegativeValues += negativeValues.reduce((acc, entry) => acc + entry.value, 0);
-                            allNegativeValues.push(...negativeValues);
-
-                            // Collect data for month-wise processing (data storage logic)
-                            negativeValues.forEach(entry => {
-                                const monthName = `Month ${entry.row}`;  // Replace with real month handling
-                                data.push({ month: monthName, value: entry.value });
-                            });
-                        } else {
-                            negativeValuesContainer.innerText += `No negative values found in ${file.name} (after ignoring the first negative value).\n`;
-                        }
-
-                        // Final summary output
-                        if (allNegativeValues.length > 0) {
-                            outputResults(); // Call the outputResults function after processing all files
-                        }
-                    });
-                };
-                reader.readAsArrayBuffer(file); // Use ArrayBuffer to read the file
-            });
-
-            // Function to output results for month-wise data processing
-            function outputResults() {
-                if (data.length > 0) {
-                    let finalData = [...data];
-                    let results = "Processed Data:\n";
-                    finalData.forEach(d => {
-                        results += `Month: ${d.month}, Value: ${d.value}\n`;
-                    });
-
-                    // Calculate sum and append to results
-                    let sum = finalData.reduce((acc, d) => acc + d.value, 0);
-                    results += `\nTotal Sum: ${sum.toFixed(2)}`;
-
-                    // Prepare results for divisor calculation (example used 499)
-                    const divisor = 499;
-                    let remainder = Math.abs(sum);
-                    let divisorResults = [];
-
-                    while (remainder >= divisor) {
-                        remainder -= divisor;
-                        divisorResults.push(divisor);
-                    }
-
-                    divisorResults.push(remainder);
-                    results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
-
-                    // Display the results
-                    summaryContainer.innerText = results;
+                // Reset containers
+                this.resetContainers();
+                
+                try {
+                    await Promise.all(files.map(file => this.processFile(file)));
+                    this.outputResults();
+                } catch (error) {
+                    console.error('Error processing files:', error);
+                    alert('An error occurred while processing the files.');
                 }
             }
+
+            resetContainers() {
+                this.fileContentContainer.innerText = "Processing files...\n";
+                this.negativeValuesContainer.innerText = "";
+                this.summaryContainer.innerText = "";
+                this.totalNegativeValues = 0;
+                this.sumNegativeValues = 0;
+                this.allNegativeValues = [];
+                this.data = [];
+            }
+
+            async processFile(file) {
+                const reader = new FileReader();
+                const dataBuffer = await new Promise((resolve, reject) => {
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(dataBuffer);
+
+                this.fileContentContainer.innerText += `\nProcessing file: ${file.name}\n`;
+                
+                // Process all worksheets in parallel
+                const worksheetPromises = workbook.worksheets.map(worksheet => 
+                    this.processWorksheet(worksheet, file.name));
+                
+                await Promise.all(worksheetPromises);
+            }
+
+            async processWorksheet(worksheet, fileName) {
+                this.fileContentContainer.innerText += `\nSheet: ${worksheet.name}\n`;
+
+                const negativeValues = [];
+                let firstNegativeSkipped = false;
+
+                // Batch process rows for better performance
+                worksheet.eachRow((row, rowIndex) => {
+                    row.values.forEach((cell, colIndex) => {
+                        if (typeof cell === 'number' && cell < 0) {
+                            if (!firstNegativeSkipped) {
+                                firstNegativeSkipped = true;
+                                return;
+                            }
+
+                            // Apply transformation
+                            const transformedValue = cell === -34.43 || cell === -43.31 ? 
+                                (cell / 3) * 2 : cell;
+
+                            negativeValues.push({
+                                row: rowIndex,
+                                col: colIndex,
+                                value: transformedValue
+                            });
+                        }
+                    });
+                });
+
+                if (negativeValues.length > 0) {
+                    this.updateNegativeValues(negativeValues, fileName);
+                }
+            }
+
+            updateNegativeValues(negativeValues, fileName) {
+                this.negativeValuesContainer.innerText += 
+                    `\nNegative Values Found in ${fileName} (ignoring the first negative value):\n`;
+                
+                negativeValues.forEach(entry => {
+                    this.negativeValuesContainer.innerText += 
+                        `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
+
+                    this.totalNegativeValues++;
+                    this.sumNegativeValues += entry.value;
+                    this.allNegativeValues.push(entry);
+
+                    const monthName = `Month ${entry.row}`;
+                    this.data.push({ month: monthName, value: entry.value });
+                });
+            }
+
+            outputResults() {
+                if (this.data.length === 0) return;
+
+                let finalData = [...this.data];
+                let results = "Processed Data:\n";
+                
+                // Batch process months for better performance
+                const batchSize = 100;
+                for (let i = 0; i < finalData.length; i += batchSize) {
+                    const batch = finalData.slice(i, i + batchSize);
+                    results += batch.map(d => 
+                        `Month: ${d.month}, Value: ${d.value}`).join('\n') + '\n';
+                }
+
+                const sum = finalData.reduce((acc, d) => acc + d.value, 0);
+                results += `\nTotal Sum: ${sum.toFixed(2)}`;
+
+                const divisor = 499;
+                let remainder = Math.abs(sum);
+                const divisorResults = [];
+
+                while (remainder >= divisor) {
+                    remainder -= divisor;
+                    divisorResults.push(divisor);
+                }
+
+                divisorResults.push(remainder);
+                results += `\n\nDivisor Results:\n${divisorResults.join('\n')}`;
+
+                this.summaryContainer.innerText = results;
+            }
+        }
+
+        // Initialize processor when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ExcelProcessor();
         });
     </script>
 </body>
