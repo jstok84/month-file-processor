@@ -3,62 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Excel Data with ExcelJS (Formula Handling)</title>
+    <title>Extract Negative Values from Excel</title>
 </head>
 <body>
-    <h2>Select an Excel file to display its content</h2>
+    <h2>Select an Excel file to display negative values</h2>
     <input type="file" id="file-input" accept=".xlsx, .xls" />
     <div id="results" style="white-space: pre-wrap;"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.2.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
 
     <script>
         document.getElementById('file-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
-
             if (!file) {
                 alert('Please select a file!');
                 return;
             }
 
             const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'array' });
 
-            reader.onload = async function(e) {
-                try {
-                    const data = e.target.result;
-                    const workbook = new ExcelJS.Workbook();
-                    await workbook.xlsx.load(data);
+                const resultsContainer = document.getElementById('results');
+                resultsContainer.innerText = "Processing file...\n";
 
-                    const resultsContainer = document.getElementById('results');
-                    resultsContainer.innerText = "Processing file...\n";
+                let negativeValues = []; // To store all negative values found
 
-                    // Loop through all worksheets in the workbook
-                    workbook.worksheets.forEach(sheet => {
-                        resultsContainer.innerText += `\nSheet: ${sheet.name}\n`;
+                // Loop through all sheets in the workbook
+                workbook.SheetNames.forEach(sheetName => {
+                    const sheet = workbook.Sheets[sheetName];
+                    resultsContainer.innerText += `\nSheet: ${sheetName}\n`;
 
-                        // Loop through each row in the sheet
-                        sheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-                            // Extract values from each cell in the row
-                            const rowData = row.values.slice(1).map(cell => {
-                                if (cell && cell.formula) {
-                                    // If the cell has a formula, use its calculated value
-                                    return cell.result || 'Formula Error'; // cell.result holds the computed value
-                                } else {
-                                    // Otherwise, just return the regular cell value
-                                    return cell;
-                                }
-                            });
+                    // Convert sheet data to JSON (header: 1 means no header row, just raw values)
+                    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-                            resultsContainer.innerText += `Row ${rowNumber}: ${rowData.join("\t")}\n`;
+                    // Iterate through all rows and columns
+                    jsonData.forEach((row, rowIndex) => {
+                        row.forEach((cell, colIndex) => {
+                            // Check if the cell is a number and is negative
+                            if (typeof cell === 'number' && cell < 0) {
+                                negativeValues.push({
+                                    row: rowIndex + 1,
+                                    col: colIndex + 1,
+                                    value: cell
+                                });
+                            }
                         });
                     });
+                });
 
-                } catch (error) {
-                    console.error("Error reading the Excel file:", error);
-                    alert('Error reading the Excel file.');
+                // Output the negative values
+                if (negativeValues.length > 0) {
+                    resultsContainer.innerText += "\nNegative Values Found:\n";
+                    negativeValues.forEach(entry => {
+                        resultsContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
+                    });
+                } else {
+                    resultsContainer.innerText += "No negative values found.\n";
                 }
             };
-
             reader.readAsArrayBuffer(file);
         });
     </script>
