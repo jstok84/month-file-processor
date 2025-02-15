@@ -32,6 +32,7 @@
                     negativeValuesContainer.innerText = "";  // Clear previous results
 
                     let negativeValues = []; // To store all negative values found
+                    let firstNegativeSkipped = false; // Flag to skip first negative value
 
                     // Loop through all sheets in the workbook
                     workbook.worksheets.forEach((worksheet) => {
@@ -46,6 +47,13 @@
                                 
                                 // Check if the cell is a number and is negative
                                 if (typeof cell === 'number' && cell < 0) {
+                                    // Skip the first negative value
+                                    if (!firstNegativeSkipped) {
+                                        firstNegativeSkipped = true;
+                                        return; // Skip this negative value
+                                    }
+
+                                    // Store the negative value (if it is not the first one)
                                     negativeValues.push({
                                         row: rowIndex,
                                         col: colIndex,
@@ -61,12 +69,12 @@
 
                     // Output the negative values
                     if (negativeValues.length > 0) {
-                        negativeValuesContainer.innerText += "\nNegative Values Found:\n";
+                        negativeValuesContainer.innerText += "\nNegative Values Found (ignoring the first negative value):\n";
                         negativeValues.forEach(entry => {
                             negativeValuesContainer.innerText += `Row ${entry.row}, Column ${entry.col}: ${entry.value}\n`;
                         });
                     } else {
-                        negativeValuesContainer.innerText += "No negative values found.\n";
+                        negativeValuesContainer.innerText += "No negative values found (after ignoring the first negative value).\n";
                     }
                 });
             };
